@@ -3,17 +3,16 @@ name: 部署到 Cloudflare Workers
 on:
   push:
     branches: [ main ]
-    paths:  # ✅ 移到push下，仅修改指定文件才触发push部署
+    paths:
       - 'worker.js'
       - 'wrangler.toml'
       - 'package.json'
       - '.github/workflows/deploy.yml'
-  workflow_dispatch:  # ✅ 手动触发无需paths，单独配置
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # ✅ 修正if条件：允许push/手动触发，移除无效的pull_request判断
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     
     steps:
@@ -30,10 +29,9 @@ jobs:
 
       - name: 部署到 Cloudflare Workers
         run: |
-          # ✅ 补充account_id（若wrangler.toml未配置，需传递）
-          wrangler deploy --var TMDB_API_KEY:"${{ secrets.TMDB_API_KEY }}" --account-id "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          # ✅ 移除错误的 --account-id 参数，仅保留 TMDB_API_KEY 变量传递
+          wrangler deploy --var TMDB_API_KEY:"${{ secrets.TMDB_API_KEY }}"
         env:
-          # ✅ 传递API Token（Wrangler会自动读取该环境变量）
+          # ✅ Wrangler 会自动读取这两个环境变量，无需命令行传递
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # ✅ 可选：显式传递account_id（避免部署时找不到账户）
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
